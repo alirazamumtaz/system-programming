@@ -1,6 +1,5 @@
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -34,17 +33,10 @@ int main(){
         // char * response = get_response(request);
 
         char buf[100];
-        struct stat st;
-        fstat(data_socket, &st);
-        // off_t size = st.st_size;
         // char* response;
         int rv;
-        int size = 0;
-        while (rv = read(data_socket, buf, sizeof(buf))){
-            size += rv;
-            printf("rv = %d\n",rv);
-        }
-        printf("Size of data in socket: %d is %d\n",data_socket,size);
+        while (rv = read(data_socket, buf, sizeof(buf)))
+            write(1,buf,rv);
         close(data_socket);
     }
     

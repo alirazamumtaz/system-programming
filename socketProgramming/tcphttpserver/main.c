@@ -27,7 +27,7 @@ int main(){
         fprintf(stderr,"\nServer waiting for client connection...");
 
         int client_addr_length = sizeof(client_address);
-        data_socket = accept(server_socket,(struct sockaddr_in*)&client_address,client_addr_length);
+        data_socket = accept(server_socket,(struct sockaddr_in*)&client_address,&client_addr_length);
         fprintf(stderr,"\n*********  CONNECTION ESTABLISHED   **********\n");
         
         char buf[100];

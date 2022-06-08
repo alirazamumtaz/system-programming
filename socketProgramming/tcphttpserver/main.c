@@ -36,12 +36,13 @@ int main(){
         char buf[100];
         struct stat st;
         fstat(data_socket, &st);
-        off_t size = st.st_size;
-        printf("Size of data in socket: %d is %ld\n",data_socket,size);
+        // off_t size = st.st_size;
         // char* response;
         int rv;
+        int size = 0;
         while (rv = read(data_socket, buf, sizeof(buf)))
-            write(1,buf,rv);
+            size += rv;
+        printf("Size of data in socket: %d is %ld\n",data_socket,size);
         close(data_socket);
     }
     

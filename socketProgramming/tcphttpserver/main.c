@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -34,6 +35,9 @@ int main(){
 
         char buf[100];
         // char* response;
+        int len = 0;
+        ioctl(data_socket, FIONREAD, &len);
+        fprintf(stderr,"\nLengh is %d\n",len);
         int rv;
         while (rv = read(data_socket, buf, sizeof(buf)))
             write(1,buf,rv);

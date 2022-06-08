@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -22,7 +23,7 @@ int main(){
     inet_aton("192.168.64.4",&server_address.sin_addr);
     memset(&(server_address.sin_zero), '\0', sizeof(server_address));
     bind(server_socket, (struct sockaddr*)&server_address, sizeof(server_address));
-
+    int fd = open("main.c",O_RDONLY);
     listen(server_socket,BACKLOG);
     while (1){
         fprintf(stderr,"\nServer waiting for client connection...");
@@ -36,7 +37,7 @@ int main(){
         char buf[100];
         // char* response;
         int len = 0;
-        ioctl(data_socket, FIONREAD, &len);
+        ioctl(fd, FIONREAD, &len);
         fprintf(stderr,"\nLengh is %d\n",len);
         int rv;
         while (rv = read(data_socket, buf, sizeof(buf)))

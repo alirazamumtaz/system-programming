@@ -37,7 +37,7 @@ int main(){
         struct stat st;
         fstat(data_socket, &st);
         off_t size = st.st_size;
-        printf("Size of data in socket: %d is %d\n",data_socket,size);
+        printf("Size of data in socket: %d is %ld\n",data_socket,size);
         // char* response;
         int rv;
         while (rv = read(data_socket, buf, sizeof(buf)))

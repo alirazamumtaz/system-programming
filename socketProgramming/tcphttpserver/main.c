@@ -40,9 +40,11 @@ int main(){
         // char* response;
         int rv;
         int size = 0;
-        while (rv = read(data_socket, buf, sizeof(buf)))
+        while (rv = read(data_socket, buf, sizeof(buf))){
             size += rv;
-        printf("Size of data in socket: %d is %ld\n",data_socket,size);
+            printf("rv = %d\n",rv);
+        }
+        printf("Size of data in socket: %d is %d\n",data_socket,size);
         close(data_socket);
     }
     

@@ -33,7 +33,7 @@ int main(){
         char buf[100];
         int rv;
         while (rv = read(data_socket, buf, sizeof(buf)))
-            write(1,buf,rv);
+            write(data_socket,buf,rv);
         close(data_socket);
     }
     

@@ -57,7 +57,7 @@ int main(int argc, char** argv){
             // fprintf(stderr,"\nInside loop\n");
             // if(count == 0)  sprintf(raw_request,"%s",buf);
             // else 
-            sprintf(raw_request,"%s",buf);
+            fprintf(stderr,"%s",buf);
             count += rv;
         }
         // raw_request[count-1] = NULL;

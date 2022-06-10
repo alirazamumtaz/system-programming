@@ -54,6 +54,7 @@ int main(int argc, char** argv){
         int rv, count = 0;
         char buf[100];
         while (rv = read(data_socket, buf, sizeof(buf))){
+            fprintf(stderr,"\nInside loop\n");
             if(count == 0)  sprintf(raw_request,buf);
             else sprintf(raw_request,"%s%s",raw_request,buf);
             count += rv;

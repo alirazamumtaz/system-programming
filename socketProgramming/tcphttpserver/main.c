@@ -61,7 +61,7 @@ int main(int argc, char** argv){
             count += rv;
         }
         // raw_request[count-1] = NULL;
-        fprintf(stderr,"Request is of size%d\n",count);
+        fprintf(stderr,"Request is of size %d\n",count);
         // char * response = get_response(request);
 
         // char* response;

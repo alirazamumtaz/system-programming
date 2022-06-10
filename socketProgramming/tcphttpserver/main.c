@@ -57,11 +57,11 @@ int main(int argc, char** argv){
             // fprintf(stderr,"\nInside loop\n");
             // if(count == 0)  sprintf(raw_request,"%s",buf);
             // else 
-            fprintf(stderr,"%s",buf);
+            // fprintf(stderr,"%s",buf);
             count += rv;
         }
         // raw_request[count-1] = NULL;
-        fprintf(stderr,"Request is\n\n%s",raw_request);
+        fprintf(stderr,"Request is of size%d\n",count);
         // char * response = get_response(request);
 
         // char* response;

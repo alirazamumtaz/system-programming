@@ -10,12 +10,16 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "tcpwebserver.h"
+
 #define BACKLOG 10
+#define MAXGETREQUESTSIZE 2048
 
 int main(int argc, char** argv){
     if(argc != 3){
-        perror("arguments not provided.\n");
-        exit(1);
+        fprintf(stderr,"arguments not provided.\n");
+        fprintf(stderr,"Usage: ./a.out <ip_address> <port_number>.\n");
+        exit(-1);
     }
 
     // Creating a socket for listening client requests
@@ -49,23 +53,23 @@ int main(int argc, char** argv){
         data_socket = accept(server_socket,(struct sockaddr*)&client_address,&client_addr_length);
         fprintf(stderr,"\nCONNECTION ESTABLISHED\n");
         
-        
-        char *raw_request;
-        int rv, count = 0;
-        char buf[100];
-        while (rv = read(data_socket, buf, sizeof(buf))){
-            // fprintf(stderr,"\nInside loop\n");
-            // if(count == 0)  sprintf(raw_request,"%s",buf);
-            // else 
-            // fprintf(stderr,"%s",buf);
-            count += rv;
-        }
-        // raw_request[count-1] = NULL;
-        fprintf(stderr,"Request is of size %d\n",count);
-        // char * response = get_response(request);
+        int rv;
+        // To read the http request 
+        char raw_request[MAXGETREQUESTSIZE];
+        memset(raw_request,'\0',MAXGETREQUESTSIZE);
+        rv = read(data_socket, raw_request, sizeof(raw_request));
 
-        // char* response;
-        // int pos = strcspn(raw_request, "\n");
+        Request *req = parse_request(raw_request);
+	fprintf(stderr,"%s\n",req->url);
+        int response_size = 1024;
+        char *response =  (char*)malloc(response_size*sizeof(char));
+        memset(response,'\0',response_size);
+        char test[4] = "123";
+        sprintf(response,"%s 200 OK\nConnection: keep-alive\nContent-Encoding: gzip\nContent-Type: text/html; charset=utf-8\nTransfer-Encoding: chunked\n\n%s",req->version,test);
+        //fprintf(stderr,"%s",response);
+	int i = 0;
+	while(rv=write(data_socket,response+(i++),1));
+        //write(data_socket,response,strlen(response));
             
         close(data_socket);
     }

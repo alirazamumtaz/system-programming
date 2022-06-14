@@ -65,11 +65,9 @@ int main(int argc, char** argv){
         char *response =  (char*)malloc(response_size*sizeof(char));
         memset(response,'\0',response_size);
         char test[4] = "123";
-        sprintf(response,"%s 200 OK\nConnection: keep-alive\nContent-Encoding: gzip\nContent-Type: text/html; charset=utf-8\nTransfer-Encoding: chunked\n\n%s",req->version,test);
+        sprintf(response,"%s 200 OK\nConnection: closed\nContent-Encoding: gzip\nContent-Type: text/html; charset=utf-8\nTransfer-Encoding: chunked\n\n%s",req->version,test);
         //fprintf(stderr,"%s",response);
-	int i = 0;
-	while(rv=write(data_socket,response+(i++),1));
-        //write(data_socket,response,strlen(response));
+        write(data_socket,response,strlen(response));
             
         close(data_socket);
     }

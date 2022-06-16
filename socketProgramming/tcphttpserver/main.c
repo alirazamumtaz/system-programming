@@ -1,19 +1,67 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <dirent.h>
+#include <limits.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 
 #include "tcpwebserver.h"
 
 #define BACKLOG 10
 #define MAXGETREQUESTSIZE 2048
+#define MAXGETRESPONSESIZE 2048
+
+int send_response_header(struct Request const *req, int client_socket){
+    time_t now;
+    time(&now);
+    char *response = (char*)malloc(MAXGETRESPONSESIZE*sizeof(char));
+    memset(response,'\0',MAXGETRESPONSESIZE);
+    int rv = snprintf(response, MAXGETREQUESTSIZE, "%s 200 OK\nDate:%s\nServer:Ali's Web Server\nContent-Type:text/html\n\n", req->version,strtok(ctime(&now),"\n"));
+    write(client_socket,response,rv);
+    free(response);
+    return 200;
+}
+
+int send_response_body(char *url, int client_socket){
+    int rv = 0;
+    struct stat st;
+    lstat(url,&st);
+
+    if(S_ISDIR(st.st_mode)){
+
+        char html_start[MAXGETRESPONSESIZE];
+        char html_end[100];
+        rv = sprintf(html_start,"<!DOCTYPE html><html><head><title>%s</title> </head><body><p>",url);
+
+        struct dirent **namelist;
+        int n;
+        sprintf(url,".%s",url); // if . is removed then it'll look for the root directory /
+        n = scandir(url, &namelist, NULL, alphasort);
+        fprintf(stderr,"n =%d\n",n);
+        for (int i = 0; i < n; i++){
+            rv = sprintf(html_start,"%s%s<br>",html_start, namelist[i]->d_name);
+        }
+        write(client_socket,html_start,rv);
+
+        rv = sprintf(html_end,"</p></body></html>");
+        write(client_socket,html_end,rv);
+    }
+    else{
+        fprintf(stderr,"something else");
+    }
+    return rv;
+}
 
 int main(int argc, char** argv){
     if(argc != 3){
@@ -59,15 +107,13 @@ int main(int argc, char** argv){
         memset(raw_request,'\0',MAXGETREQUESTSIZE);
         rv = read(data_socket, raw_request, sizeof(raw_request));
 
+        int n = 0;
+        // Parse request to get http version and URL
         Request *req = parse_request(raw_request);
-	fprintf(stderr,"%s\n",req->url);
-        int response_size = 1024;
-        char *response =  (char*)malloc(response_size*sizeof(char));
-        memset(response,'\0',response_size);
-        char test[4] = "123";
-        sprintf(response,"%s 200 OK\nConnection: closed\nContent-Encoding: gzip\nContent-Type: text/html; charset=utf-8\nTransfer-Encoding: chunked\n\n%s",req->version,test);
-        //fprintf(stderr,"%s",response);
-        write(data_socket,response,strlen(response));
+
+        int status;
+        status = send_response_header(req,data_socket);
+        if(status == 200)   send_response_body(req->url,data_socket);
             
         close(data_socket);
     }

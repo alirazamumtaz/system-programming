@@ -7,7 +7,6 @@
 #include <netdb.h>
 #include <dirent.h>
 #include <limits.h>
-
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -18,49 +17,81 @@
 
 #include "tcpwebserver.h"
 
+
 #define BACKLOG 10
 #define MAXGETREQUESTSIZE 2048
 #define MAXGETRESPONSESIZE 2048
 
-int send_response_header(struct Request const *req, int client_socket){
+
+void send_response(struct Request const *req, int client_socket){
+    int rv = 0, status = 0;
+    struct stat st;
+
+    lstat(req->url,&st);
     time_t now;
     time(&now);
-    char *response = (char*)malloc(MAXGETRESPONSESIZE*sizeof(char));
-    memset(response,'\0',MAXGETRESPONSESIZE);
-    int rv = snprintf(response, MAXGETREQUESTSIZE, "%s 200 OK\nDate:%s\nServer:Ali's Web Server\nContent-Type:text/html\n\n", req->version,strtok(ctime(&now),"\n"));
-    write(client_socket,response,rv);
-    free(response);
-    return 200;
-}
 
-int send_response_body(char *url, int client_socket){
-    int rv = 0;
-    struct stat st;
-    lstat(url,&st);
+    if(access(req->url,F_OK) != 0)  status = 404;
+    else    status = 200;
 
-    if(S_ISDIR(st.st_mode)){
+    
+    char *header = (char*) malloc(MAXGETRESPONSESIZE*sizeof(char*));
+    char *body   = (char*) malloc(MAXGETRESPONSESIZE*sizeof(char*));//[MAXGETRESPONSESIZE];
+    char *buff   = (char*) malloc(MAXGETRESPONSESIZE*sizeof(char*));//[MAXGETRESPONSESIZE];
+    
+    //Writing Header to the data socket
+    rv = snprintf(header, MAXGETREQUESTSIZE, "%s %d OK\nDate:%s\nServer:Ali's Web Server\nContent-Type:text/html\n\n", req->version,status,strtok(ctime(&now),"\n"));
+    write(client_socket,header,rv);
+    // Writing html/body to the data socket
+    rv = sprintf(body,"<!DOCTYPE html><html><head><title>%s</title></head><body><p>",req->url+1);
+    write(client_socket,body,rv);
+        // fprintf(stderr,"html =%s\n",html);
 
-        char html_start[MAXGETRESPONSESIZE];
-        char html_end[100];
-        rv = sprintf(html_start,"<!DOCTYPE html><html><head><title>%s</title> </head><body><p>",url);
-
+    if(status == 404){
+        rv = sprintf(buff,"\nError 404 - Page Not Found.");
+    }
+    else if(S_ISDIR(st.st_mode)){
         struct dirent **namelist;
         int n;
-        sprintf(url,".%s",url); // if . is removed then it'll look for the root directory /
-        n = scandir(url, &namelist, NULL, alphasort);
-        fprintf(stderr,"n =%d\n",n);
+        n = scandir(req->url, &namelist, NULL, alphasort);
         for (int i = 0; i < n; i++){
-            rv = sprintf(html_start,"%s%s<br>",html_start, namelist[i]->d_name);
+            rv += sprintf(buff,"\n%s%s<br>\n",buff, namelist[i]->d_name);
         }
-        write(client_socket,html_start,rv);
+        write(client_socket,buff,rv);
 
-        rv = sprintf(html_end,"</p></body></html>");
-        write(client_socket,html_end,rv);
     }
-    else{
+    else if(S_ISREG(st.st_mode)){
+        if(strstr(req->url,".cgi")){
+            char cmd[16];
+            sprintf(cmd,"/bin/bash %s",req->url);
+            int old_std_out = dup(1);
+            dup2(client_socket,1);
+            system(cmd);
+            dup2(1,old_std_out);
+        }
+        else{
+            int fd = open(req->url,O_RDONLY);
+            if(fd < 0){
+                fprintf(stderr,"File error\n");
+                return; 
+            }
+            char ch[1024];
+            int n;
+            while((n = read(fd,ch,1024)) != 0){
+                write(client_socket,ch,n); // writing byte by byte
+            }
+            close(fd);
+        }
+    }
+    else {
         fprintf(stderr,"something else");
     }
-    return rv;
+    
+    rv += sprintf(body,"\n</p></body></html>");
+    free(header);
+    free(body);
+    free(buff);
+    write(client_socket,body,rv);
 }
 
 int main(int argc, char** argv){
@@ -110,10 +141,7 @@ int main(int argc, char** argv){
         int n = 0;
         // Parse request to get http version and URL
         Request *req = parse_request(raw_request);
-
-        int status;
-        status = send_response_header(req,data_socket);
-        if(status == 200)   send_response_body(req->url,data_socket);
+        send_response(req,data_socket);
             
         close(data_socket);
     }

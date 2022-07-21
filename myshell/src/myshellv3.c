@@ -27,7 +27,11 @@
 #define BUILTINS 2
 
 int execute(char* arglist[]);
+
 extern int errno;
+static int pipes = 0;
+int pipPos[10]; // as for now, I am restring the number of pipes to 10 only
+
 char** tokenize(char* cmdline);
 char* read_cmd(char*, FILE*);
 const char* builtinCmd[BUILTINS] = {"exit","cd"};
@@ -59,8 +63,8 @@ int mycd(int argc, char** argv){
 
 const int (*builtinCmdPtr[BUILTINS])(int, char**) = {myexit, mycd};
 
-int execBuiltin(int i,int argc, char **argv){
-	int rv =  (*builtinCmdPtr[i])(i,argv);
+int execBuiltin(int cmdNo, char **argv){
+	int rv =  (*builtinCmdPtr[cmdNo])(cmdNo,argv);
 	return 0;
 }
 
@@ -79,7 +83,15 @@ int main(){
    char* prompt = PROMPT;   
    while((cmdline = read_cmd(prompt,stdin)) != NULL){
       if((arglist = tokenize(cmdline)) != NULL){
-            execute(arglist);
+         if(pipes == 0) execute(arglist);
+         else{
+            int pfd[2];
+            pipe(fd);
+            fd[0] = 0;
+            for (int i = 0; i <= pipes; ++i){
+               
+            }
+         }
        //  need to free arglist
          for(int j=0; j < MAXARGS+1; j++)
 	         free(arglist[j]);
@@ -94,8 +106,8 @@ int execute(char* arglist[]){
    int status, rv;
    rv = isBuiltin(arglist[0]);
    if(rv != -1){
-	execBuiltin(rv, arglist);
-	if(rv == 0)	return 0;
+	  execBuiltin(rv, arglist);
+	  if(rv == 0)	return 0;
    }
    else{
    	int cpid = fork();
@@ -104,7 +116,7 @@ int execute(char* arglist[]){
          	perror("fork failed");
 	      	exit(1);
       	case 0:
-		execvp(arglist[0], arglist);
+            execvp(arglist[0], arglist);
  	      	perror("Command not found...");
 	      	exit(1);
       	default:
@@ -130,6 +142,10 @@ char** tokenize(char* cmdline){
    while(*cp != '\0'){
       while(*cp == ' ' || *cp == '\t') //skip leading spaces
           cp++;
+       if ( *cp == '|'){ // there is a pipe
+         pipes++;
+         pipPos[pipes] = argnum;
+       }
       start = cp; //start of the word
       len = 1;
       //find the end of the word

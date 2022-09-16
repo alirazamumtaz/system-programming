@@ -1,0 +1,17 @@
+_HiStOrY_V2_
+ls\040-l
+exit
+ls\040>\040ls.out
+cat\040ls.out\040
+clear
+exit
+echo\040$a
+exit
+a
+help
+exit
+help
+exit
+ls\040-l\040|\040cat
+exit
+exit

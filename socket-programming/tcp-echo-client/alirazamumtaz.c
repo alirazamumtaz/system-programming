@@ -1,12 +1,4 @@
 /*
-*  Video Lecture: 34
-*  Programmer: Arif Butt
-*  Course: System Programming with Linux
-*  tcpechoclient.c: Client programs connects to the echo
-*  service running on the ubuntuserver having ip 192.168.100.20
-*  at port 7, sends a string and receives the same string
-*  and display it on stdout
-*  compile: gcc tcpechoclient.c
 *  usage: ./a.out
 */
 #include <sys/types.h>

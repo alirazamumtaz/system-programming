@@ -1,13 +1,4 @@
 /*
-*  Video Lecture: 34
-*  Programmer: Arif Butt
-*  Course: System Programming with Linux
-*  tcpechoserver.c: Server programs runs on ubuntu server
-*  binds itself to ip 192.168.100.20 and port 54154, 
-*  waits for client connections
-*  receives a string from client
-*  and will send it back to client
-*  compile: gcc tcpechoserver.c
 *  usage: ./a.out
 */
 #include <sys/types.h>
